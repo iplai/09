@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>零九助手 - Admin</title>
+  <link rel="icon" href="/09/favicon.ico">
+  <link href="/09/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/09/css/bootstrap-icons.min.css" rel="stylesheet">
+  <script src="/09/js/bootstrap.bundle.min.js"></script>
+  <script src="/09/js/index.js?t=1"></script>
+  <script src="/09/js/jquery.min.js"></script>
+  <script src="/09/js/js.cookie.min.js"></script>
+  <script src="/09/js/highlight.min.js"></script>
+  <link href="/09/css/highlight.default.min.css" rel="stylesheet">
+  <link href="/09/css/toastr.min.css" rel="stylesheet" />
+  <script src="/09/js/toastr.min.js"></script>
+  <link href="/09/css/index.css" rel="stylesheet">
+  <script src="/09/js/md5.js"></script>
+  <script src="/09/js/aardio.js"></script>
+  <script src="/09/js/pocketbase/pocketbase.umd.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    <header class="mb-3 border-bottom">
+      <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+          <ul class="nav col-11 col-lg-auto me-lg-auto justify-content-center mb-md-0">
+            <li class="nav-item">
+              <a class="nav-link" type="button" href="/09/">战绩</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" type="button" @click="test">测试</a>
+            </li>
+            <li class="nav-item">
+              <a type="button" class="nav-link" data-bs-toggle="modal" data-bs-target="#loginSaleModal">上号</a>
+            </li>
+            <li class="nav-item">
+              <a type="button" class="nav-link" data-bs-toggle="modal" data-bs-target="#hotKeysModal">热键</a>
+            </li>
+            <li class="nav-item">
+              <a type="button" class="nav-link" data-bs-toggle="modal" data-bs-target="#friendsModal" @click="updateFriendsTotal">好友</a>
+            </li>
+          </ul>
+          <div class="col-1 col-lg-auto me-lg-auto justify-content-center mb-md-0">
+            <i class="bi" :class="aardioConnected ? 'bi-wifi' : 'bi-wifi-off text-danger'"></i>
+          </div>
+        </div>
+      </div>
+    </header>
+    <div class="container">
+      <div id="download-div" class="position-relative p-5 text-center bg-body-tertiary rounded-3" style="display: none;">
+        <button onclick="$('#download-div').hide()" type="button" class="position-absolute top-0 end-0 p-3 m-3 btn-close bg-secondary bg-opacity-10 rounded-pill" aria-label="Close"></button>
+        <i class="bi bi-cloud-download" style="font-size: 5rem; color: cornflowerblue;"></i>
+        <h1 class="text-body-emphasis">获取零九助手</h1>
+        <p class="col-lg-8 mx-auto fs-5 text-muted">
+          请在蓝奏云下载最新版零九助手压缩包（密码：<code>1234</code>），解压并运行，本页面会自动连接到零九助手。
+        </p>
+        <div class="d-inline-flex gap-2 mb-5">
+          <a href="https://plai.lanzouq.com/b01dm8zej" target="_blank" class="d-inline-flex align-items-center btn btn-primary btn-lg px-4 rounded-pill" type="button">
+            下载 <i class="bi bi-box-arrow-right ms-2"></i>
+          </a>
+          <button class="btn btn-outline-secondary btn-lg px-4 rounded-pill" type="button" data-bs-toggle="modal" data-bs-target="#contactModal">
+            联系<i class="bi bi-wechat ms-2"></i></a>
+        </div>
+      </div>
+      <div class=" ">
+        <div class="d-flex align-items-center">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault1" v-model="loginSwitch">
+            <label class="form-check-label" for="flexCheckDefault1"> 继续 </label>
+          </div>
+          <div class="form-check ms-2">
+            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault2" v-model="loginReverse">
+            <label class="form-check-label" for="flexCheckDefault2"> 逆序 </label>
+          </div>
+          <span class="badge ms-2 text-bg-primary" type="button" @click="loginSales">执行</span>
+        </div>
+      </div>
+
+      <template v-for="item in loginInfos" v-html="printObject(item)">
+        <div class="mb-2" v-if="typeof item === 'string'"><code>{{ item }}</code></div>
+        <pre v-else><code class="json"><span v-html="printObject(item)"></span></code></pre>
+      </template>
+      <!-- <pre><code class="json"><span v-html="printObject(outputs)"></span></code></pre> -->
+
+    </div>
+
+    <div class="modal fade" id="loginSaleModal" tabindex="-1" aria-labelledby="loginSaleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="loginSaleModalLabel">自助上号</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="input-group flex-nowrap mb-2">
+              <input type="text" class="form-control" placeholder="请输入4位取号码，取号码请找管理员购买" v-model="xcode">
+              <button class="btn border btn-light input-group-button" type="button" @click="loginSaleTest()">测试</button>
+              <button class="btn border btn-success input-group-button" type="button" @click="loginSale()">上号</button>
+            </div>
+            <div class="input-group flex-nowrap mb-2">
+              <input type="text" class="form-control" placeholder="name" v-model="loginSaleName">
+              <input type="text" class="form-control" placeholder="newpassword" v-model="loginSaleNewpassword">
+              <button class="btn border btn-success input-group-button" type="button" @click="loginSale2()">上号</button>
+            </div>
+            <hr>
+            <input type="text" class="form-control mb-3" placeholder="password" v-model="passwordToEncode">
+            <p><code>{{ md5Encode(passwordToEncode) }}</code></p>
+            <p><code>{{ passwordToNewPassword(passwordToEncode) }}</code></p>
+            <hr>
+            <div v-if="loginOutputs.length > 0" class="">
+              <hr>
+              <pre><code class="json"><span v-html="printObject(loginOutputs)"></span></code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="hotKeysModal" tabindex="-1" aria-labelledby="hotKeysModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <form @submit.prevent="storeCookies">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="hotKeysModalLabel">热键设置</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="war3FullScreenSwitch" v-model="cookies.hotKeys.war3FullScreenSwitch.enable" v-on:change="setHotKey('war3FullScreenSwitch')">
+                <label class="form-check-label" for="war3FullScreenSwitch">魔兽窗口全屏切换</label>
+                <span class="badge text-bg-primary ms-2">Ctrl + F1</span>
+                <span class="badge text-bg-success ms-2" v-if="cookies.hotKeys.war3FullScreenSwitch.hotKeyId">已成功开启 热键ID {{ cookies.hotKeys.war3FullScreenSwitch.hotKeyId }}</span>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">确定</button>
+            </div>
+          </div>
+      </div>
+      </form>
+    </div>
+
+    <div class="modal fade" id="friendsModal" tabindex="-1" aria-labelledby="friendsModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="friendsModalLabel">我的好友</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div v-if="token">
+              <div class="mb-2">
+                <button type="button" class="btn btn-primary position-relative me-5" @click="updateFriends(3)">
+                  好友
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ user_id_token in friends ? Math.max(friends[user_id_token][3].total, 0) : 0 }}
+                  </span>
+                </button>
+                <button type="button" class="btn btn-primary position-relative me-5" @click="updateFriends(1)">
+                  关注
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ user_id_token in friends ? Math.max(friends[user_id_token][1].total, 0) : 0 }}
+                  </span>
+                </button>
+                <button type="button" class="btn btn-primary position-relative me-5" @click="updateFriends(2)">
+                  粉丝
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ user_id_token in friends ? Math.max(friends[user_id_token][2].total, 0) : 0 }}
+                  </span>
+                </button>
+                <button type="button" class="btn btn-primary position-relative me-5" @click="updateFriendsTotal">
+                  刷新
+                  <span class="position-absolute top-0 start-100 translate-middle badge bg-success">
+                    <i class="bi bi-arrow-clockwise"></i>
+                  </span>
+                </button>
+              </div>
+              <label for="user_names_to_follow" class="form-label">需要关注的玩家名：
+                <span class="badge btn btn-light text-bg-secondary " @click="fillInCurrentUserNames()">填入本局玩家</span>
+              </label>
+
+              <div class="input-group flex-nowrap">
+                <button class="btn btn-success input-group-button" type="button" @click="followUserNames()">一键关注</button>
+                <input type="search" class="form-control" id="user_names_to_follow" placeholder="请填入玩家名" v-model="user_names_to_follow" aria-describedby="user_names_to_follow_help">
+              </div>
+              <div id="user_names_to_follow_help" class="form-text mb-2">如果要关注多个用户名，用空格隔开</div>
+
+              <div class="input-group flex-nowrap mb-2">
+                <span class="btn btn-success input-group-button" type="button" @click="followTopPlayers()">关注TOP</span>
+                <span class="input-group-text">数量</span>
+                <input type="number" class="form-control" v-model="follow_top_count" placeholder="赛季TOP数量">
+                <span class="input-group-text">赛季</span>
+                <input type="number" class="form-control" v-model="season_id" placeholder="赛季ID">
+              </div>
+
+              <hr>
+
+              <div class="rowalign-items-center">
+                <label for="friendsActiveDays" class="form-label">活跃天数</label>
+                <div class="input-group flex-nowrap mb-2">
+                  <input type="number" class="form-control" id="friendsActiveDays" v-model="cookies.friendsActiveDays" aria-describedby="friendsActiveDaysHelp">
+                  <button class="btn border btn-light input-group-button" type="button" @click="cookies.friendsActiveDays=0"><i class="bi bi-chevron-double-left"></i></button>
+                  <button class="btn border btn-light input-group-button" :disabled="cookies.friendsActiveDays === 30" @click="cookies.friendsActiveDays=30">30</button>
+                  <button class="btn border btn-light input-group-button" type="button" @click="cookies.friendsActiveDays=1000"><i class="bi bi-chevron-double-right"></i></button>
+                </div>
+                <span id="friendsActiveDaysHelp" class="form-text">
+                  统计最近有对局记录的天数：如果玩家在最近的这些天数内有对局记录，就算作活跃玩家，新号的天数是999
+                </span>
+              </div>
+
+              <div class="mt-2">
+                <button type="button" class="btn btn-danger position-relative me-5" @click="deleteInactiveFriends()">
+                  删除所有不活跃好友
+                </button>
+                <button type="button" class="btn btn-danger position-relative me-5" @click="deleteInactiveFollows()">
+                  删除所有不活跃关注
+                </button>
+                <button type="button" class="btn btn-success position-relative mt-2 me-5" @click="followActiveFans()">
+                  关注所有活跃的粉丝
+                </button>
+                <button type="button" class="btn btn-warning position-relative mt-2 me-5" @click="outputs.length=0">
+                  清空输出
+                </button>
+              </div>
+            </div>
+            <div v-else>
+              未检测到已登录的账号
+            </div>
+            <div v-if="outputs && outputs.length > 0" class="mt-2">
+              <pre><code class="json"><span v-html="printObject(outputs)"></span></code></pre>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" data-bs-dismiss="modal" class="btn btn-primary" @click="storeCookies">确定</button>
+          </div>
+        </div>
+      </div>
+      </form>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { createApp, ref, reactive, computed } from "/09/js/vue.esm-browser.prod.min.js"
+    const app = createApp({
+      methods: {
+        async loginSales() {
+          while (true) {
+            try {
+              await this.test()
+            } catch (error) {
+
+            }
+          }
+        },
+        async test() {
+          const filter = `token=null&&data.newpassword!=null&&login_time<"${days(5)}"&&player_time<"${days(20)}"`
+          await aardio.run(`process.kill("siyou_client.exe");process.kill("siyouWebview.exe");`)
+          const pb = new PocketBase(`http://${window.location.host}`)
+          await pb.admins.authWithPassword(...Cookies.getJSON('ADMIN'))
+          const totalItems = (await pb.collection("sales").getList(1, 1, { filter })).totalItems
+          let index = 0
+          while (index < totalItems) {
+            index++
+            const a = await pb.collection("sales").getFirstListItem(filter, { sort: `${this.loginReverse ? '-' : ''}player_time` })
+            const data = a['data']
+            this.loginInfos = ["", "", "", "", "", "", ""]
+            let token = ''
+            this.loginsOneHour = (await pb.collection("sales").getList(1, 1, { filter: `login_time>"${hours(1)}"` })).totalItems
+            this.loginInfos[0] = `最近1小时登录：${this.loginsOneHour}`
+            this.loginInfos[1] = `${index}/${totalItems} "${a['user_name']}" ${a['lv']}`
+            this.loginInfos[2] = `"${a['name']}" "${data['newpassword']}"`
+            let payload = { login_time: hours(0) }
+            const code = $("#loginSale").html().replace(/__a__/, a['name']).replace(/__b__/, data['newpassword'])
+            await aardio.run(code)
+            await sleep(20)
+            await aardio.run(`process("C:/Program Files (x86)/09Platform/bins/siyou_client.exe")`)
+            await sleep(1000)
+            let pid = await aardio.run(`var prcs=process.find("siyou_client.exe");return prcs?prcs.id:null`)
+            this.loginInfos[3] = `pid: ${pid}`
+            await aardio.run(`mouse.click(960, 470, true)`)
+            for (let i = 0; i < 10; i++) {
+              await sleep(100)
+              await aardio.run(`mouse.click(960, 470, true)`)
+            }
+            this.loginInfos[4] = `0 token:`
+            for (let i = 0; i < 32; i++) {
+              await sleep(200)
+              if ((i % 20 == 0)) {
+                await aardio.run(`win.setForeground(winex.find(,,${pid}))`)
+                await aardio.run(`mouse.click(960, 470, true)`)
+              }
+              let res = ''
+              try {
+                res = await aardio.run(`return http.get(string.format("http://127.0.0.1:2009/json?time=%d", tonumber(time())))||null`)
+              } catch (error) { }
+              token = res ? JSON.parse(res).find(item => (item.url.match(/token=([^&]+)/) || [])[1])?.url.match(/token=([^&]+)/)?.[1] || null : null
+              this.loginInfos[4] = `${i} token: ${token}`
+              if (token) {
+                break
+              }
+            }
+            try {
+              await aardio.run(`mouse.move(1145, 822, true)`)
+              await aardio.run(`process.kill("siyou_client.exe");process.kill("siyouWebview.exe");`)
+            } catch (error) {
+              console.log(error)
+            }
+            if (token) {
+              payload['token'] = token
+              payload['token_time'] = days(0)
+              data['newpasswords'][data['newpassword']] = 0
+              let res = await $.getJSON(`https://hd.09game.com/s28diancang/SignIn?token=${token}`)
+              this.loginInfos[5] = res
+              res = await $.getJSON(`https://users.09game.com/Home/GetUserInfoV1?token=${token}`)
+              data['created_at'] = res['temp']['created_at'].replace('T', "")
+              data['email'] = res['temp']['email']
+              data['phone'] = res['temp']['moile']
+              data['real_name'] = res['temp']['real_name']
+              if (res['temp']['Id_card'] === 1)
+                data['id_card_number'] = res['temp']['id_card_number']
+              res = await $.getJSON(`https://users.09game.com/Home/GetAllUser?type=0&userInfo=&token=${token}`)
+              data['users'] = {}
+              for (let i = 0; i < res['msg'].length; i++) {
+                const info = res['msg'][i]
+                const user_id = info['user_id']
+                data['users'][user_id] = {}
+                data['users'][user_id]['flag'] = info['user_flag']
+                data['users'][user_id]['user_name'] = info['user_name']
+                data['users'][user_id]['achieve'] = info['total_score']
+                data['users'][user_id]['vip1'] = info['vip_level']
+                data['users'][user_id]['vip2'] = info['vip2_level']
+                if (user_id == token.split('-')[0]) {
+                  payload['v1'] = info['vip_level']
+                  payload['v2'] = info['vip2_level']
+                  // Bag
+                  const bag = {}
+                  let json_data = `{"type":"q_my_item","json":"{\\"token\\":\\"${token}\\"}"}`
+                  let res = await $.getJSON(`https://shop.09game.com/shop?${json_data}`)
+                  if (res.code === 0) {
+                    if (res.count >= 1) {
+                      let records = res.records;
+                      for (let record of records) {
+                        bag[`id${record.item_id}`] = Object.fromEntries(
+                          Object.entries(record).filter(([key]) => !["item_id", "func_id", "item_type", "use_flag"].includes(key))
+                        );
+                        if (record.item_id === 20054) {
+                          payload['g'] = record.amount
+                        }
+                      }
+                    }
+                  }
+                  data['users'][user_id]['bag'] = bag
+                  // Money
+                  json_data = `{"type":"q_my_money","json":"{\\"token\\":\\"${token}\\"}"}`
+                  let url = `https://shop.09game.com/shop?${json_data}`;
+                  res = await $.getJSON(url);
+                  if (res.code === 0 && res.count === 1) {
+                    data['users'][user_id]['money1'] = res.records[0].money1;
+                    data['users'][user_id]['money2'] = res.records[0].money2;
+                  }
+                }
+              }
+
+            } else {
+              data['newpasswords'][data['newpassword']] += 1
+            }
+            payload['data'] = data
+            await pb.collection("sales").update(a['id'], payload)
+            if (!this.loginSwitch)
+              break
+          }
+        },
+        async deleteRawsRecordsWithTableFields() {
+          const raws = new PocketBase('http://127.0.0.1:8090').collection("raws")
+          const items = await raws.getFullList()
+          for (const item of items) {
+            if (!Array.isArray(item.data)) {
+              raws.delete(item.id)
+            }
+          }
+        },
+        async deleteRawsRecordsWithEmptyData() {
+          const raws = new PocketBase('http://127.0.0.1:8090').collection("raws")
+          const items = await raws.getFullList()
+          for (const item of items) {
+            if (Array.isArray(item.data) && item.data.length === 0) {
+              raws.delete(item.id)
+            }
+          }
+        },
+        dumpObject(myObject) {
+          const jsonString = JSON.stringify(myObject, null, 2)
+          const blob = new Blob([jsonString], { type: 'application/json' })
+          const downloadLink = document.createElement('a')
+          downloadLink.href = URL.createObjectURL(blob)
+          downloadLink.download = 'output.json'
+          document.body.appendChild(downloadLink)
+          downloadLink.click()
+          document.body.removeChild(downloadLink)
+        },
+        connectAardio() {
+          $.ajax({
+            url: 'http://127.0.0.1:9002/aardio.js',
+            type: 'HEAD',
+            success: (data, textStatus, xhr) => {
+              aardio.open().then(() => {
+                this.setHotKey('war3FullScreenSwitch')
+                aardio.run($('#autoMatch').html())
+                aardio.on("update", (res) => {
+                })
+                $('#download-div').hide()
+              })
+              this.aardioConnected = true
+            },
+            error: (xhr, textStatus, errorThrown) => {
+              if (!this.aardioConnected) {
+                $('#download-div').show()
+              }
+              this.aardioConnected = false
+            }
+          })
+        },
+        startInterval() {
+          this.intervalId = setInterval(() => {
+            if (!aardio.isConnected()) {
+              this.connectAardio()
+            } else {
+            }
+          }, 1000);
+        },
+        stopInterval() {
+          clearInterval(this.intervalId);
+        },
+        updateUserId(user_id) {
+          this.user_id = user_id
+          if (!(user_id in this.userinfos)) {
+            $.getJSON(`https://users.09game.com/home/GetUserPub?user_id=${user_id}`, (res) => {
+              this.userinfos[user_id] = res.temp[0]
+            })
+          }
+        },
+        readConfigIni() {
+          aardio.run($('#readConfigIni').html()).then(res => {
+            var user_id = res.UserId
+            if (user_id) {
+              this.updateUserId(user_id)
+            }
+          })
+        },
+        exploreGamelog() {
+          aardio.run(`process.exploreSelect(config.日志路径 + "/" + "${this.filename}")`)
+        },
+        setGamelogIndex(gamelog_index) {
+          gamelog_index = Math.max(0, Math.min(gamelog_index, this.filenames.length - 1));
+          this.gamelog_index = gamelog_index;
+          this.filename = this.filenames[this.filenames.length - 1 - gamelog_index];
+        },
+        getLocalPlayerIndex(gamelog) {
+          return gamelog.local_slot ? gamelog.slots[gamelog.local_slot] : 0
+        },
+        async readGamelog(gamelog_index) {
+          const { lines, filename } = await aardio.getGamelog(gamelog_index)
+
+          if (!this.filenames.includes(filename)) {
+            this.filenames.push(filename);
+            this.filenames.sort();
+          }
+
+          this.setGamelogIndex(gamelog_index);
+          parseGamelog(lines, filename, this.gamelogs);
+          const gamelog = this.gamelogs[filename];
+          const localPlayerIndex = this.getLocalPlayerIndex(gamelog);
+
+          for (let index = 0; index < gamelog.players.length; index++) {
+            const player = gamelog.players[index];
+            let user_id = Object.keys(this.userinfos).find(
+              (user_id) => this.userinfos[user_id].user_name === player.user_name
+            );
+
+            if (user_id) {
+              player.user_id = user_id;
+              if (!player.hasOwnProperty('score')) {
+                this.updateScore(player, gamelog.game_type, gamelog.game_source ? gamelog.game_source : -1);
+              }
+              if (localPlayerIndex == index) {
+                this.user_id = user_id;
+              }
+            } else if (!player.user_name.startsWith('玩家 ')) {
+              $.getJSON(`https://users.09game.com/home/GetUserPub?user_name='${player.user_name}'`).then(res => {
+                if (res.result == 0) {
+                  user_id = res.temp[0].user_id;
+                  this.userinfos[user_id] = res.temp[0];
+                  player.user_id = user_id;
+                  if (!player.hasOwnProperty('score')) {
+                    this.updateScore(player, gamelog.game_type, gamelog.game_source ? gamelog.game_source : -1);
+                  }
+                  if (localPlayerIndex == index) {
+                    this.user_id = user_id;
+                  }
+                }
+              })
+            }
+          }
+        },
+        showUserInfo(user_id) {
+          this.user_id_show = user_id || 0
+          const userInfo = this.userinfos[user_id]
+          if (userInfo) {
+            if (userInfo.flag) {
+              userInfo.flags = this.flagToFlags(userInfo.flag).join(', ')
+            }
+            navigator.clipboard.writeText(userInfo.user_name)
+          }
+        },
+        flagToFlags(flag) {
+          var flags = [];
+          var bin_str = flag.toString(2);
+          for (var i = 0; i < bin_str.length; i++) {
+            if (bin_str[i] === "1") {
+              flags.push(bin_str.length - i);
+            }
+          }
+          return flags.sort();
+        },
+        onSearchSubmit() {
+          window.open(`https://www.09game.com/html/2020gamescore/web/?name=${this.search_user_name}&type=${this.gamelog ? this.gamelog.game_type : 1}`, '_blank')
+        },
+        storeCookies() {
+          Cookies.set('GAMEHELPER', JSON.stringify(this.cookies))
+        },
+        updateFriendsTotal() {
+          if (this.token) {
+            this.user_id = this.token.split('-')[0]
+          }
+          aardio.run(`return http.get(string.format("http://127.0.0.1:2009/json?time=%d", tonumber(time())))||null`).then(res => {
+            const token = res ? JSON.parse(res).find(item => (item.url.match(/token=([^&]+)/) || [])[1])?.url.match(/token=([^&]+)/)?.[1] || null : null
+            if (token) {
+              this.token = token
+              this.updateUserId(token.split('-')[0]);
+              if (!(this.user_id in this.friends)) {
+                this.friends[this.user_id] = { 1: { total: 0, users: [] }, 2: { total: 0, users: [] }, 3: { total: 0, users: [] }, }
+              }
+              Object.entries(this.friends[this.user_id]).map(([type, data]) => {
+                const url = `https://users.09game.com/Home/GetUserFriend?token=${token}&status=1&number=300&type=${type}`;
+                $.getJSON(url).then(res => {
+                  if (res.result === 0) {
+                    data.total = res.temp.total
+                    data.users = res.temp.user
+                  }
+                })
+              });
+            }
+          })
+        },
+        async followFriend(user_id, user_name = null) {
+          const friends = this.friends[this.user_id_token]
+          const res = await $.getJSON(`https://users.09game.com/home/userrelation?token=${this.token}&to_user_id=${user_id}&use_action=0`);
+          const { code, msg, err, category } = res;
+          if (code === 0) {
+            const users = friends[2].users;
+            const index = users.findIndex(user => user.user_id == user_id);
+            if (index !== -1) {
+              users.splice(index, 1);
+              friends[2].total--;
+            }
+            const added_users = friends[category].users;
+            const added_index = added_users.findIndex(user => user.user_id == user_id);
+            if (added_index === -1) {
+              added_users.push({ user_id, user_name });
+              friends[category].total++;
+            }
+          }
+          return { msg, err };
+        },
+        async deleteFriend(user_id, user_name = null) {
+          const friends = this.friends[this.user_id_token]
+          const res = await $.getJSON(`https://users.09game.com/home/userrelation?token=${this.token}&to_user_id=${user_id}&use_action=1`)
+          const { code, msg, err } = res
+          if (code === 0 && msg === '删除好友成功') {
+            const users_friend = friends[3].users;
+            const index_friend = users_friend.findIndex(user => user.user_id == user_id);
+            if (index_friend !== -1) {
+              users_friend.splice(index_friend, 1);
+              friends[3].total--;
+              friends[2].users.push({ user_id, user_name })
+              friends[2].total++
+            }
+            const users_follow = friends[1].users;
+            const index_follow = users_follow.findIndex(user => user.user_id == user_id);
+            if (index_follow !== -1) {
+              users_follow.splice(index_follow, 1);
+              friends[1].total--;
+            }
+          }
+          return { msg, err }
+        },
+        async followUserNames() {
+          const user_names = this.user_names_to_follow.trim().split(/\s+/)
+          for (const user_name of user_names) {
+            let user_id = Object.keys(this.userinfos).find(user_id => this.userinfos[user_id].user_name === user_name)
+            if (user_id) {
+              const { msg, err } = await this.followFriend(user_id, user_name)
+              this.outputs.push({ user_id, user_name, msg, err })
+            } else {
+              const res = await $.getJSON(`https://users.09game.com/home/GetUserPub?user_name='${user_name}'`)
+              if (res.result == 0) {
+                user_id = res.temp[0].user_id
+                this.userinfos[user_id] = res.temp[0]
+                const { msg, err } = await this.followFriend(user_id, user_name)
+                this.outputs.push({ user_id, user_name, msg, err })
+              }
+
+            }
+          }
+        },
+        async followActiveFans() {
+          const friends = this.friends[this.user_id_token]
+          const users = [...friends[2].users]
+          for (const user of users) {
+            if (!('days' in user)) {
+              const res = await $.getJSON(`https://score.09game.com/Ordinary/UserPlayerGameList?UserID=${user.user_id}`)
+              if (res.data.length === 0) {
+                user.days = 999
+              } else {
+                const records = res.data.sort((a, b) => new Date(b.player_time) - new Date(a.player_time))
+                const user_names = [...new Set(res.data.filter(item => item.user_name !== '' && item.user_name != user.user_name).map(item => item.user_name))]
+                if (user_names.length > 0) {
+                  user.old_user_names = user_names.join(', ')
+                }
+                user.days = this.calculateDaysDiff(records[0].player_time)
+              }
+            }
+            if (user.days <= this.cookies.friendsActiveDays) {
+              const { msg, err } = await this.followFriend(user.user_id, user.user_name)
+              const index = this.outputs.findIndex(output_user => output_user.user_id == user.user_id)
+              if (index !== -1) {
+                Object.assign(this.outputs[index], { ...user, msg, err })
+              } else {
+                this.outputs.push({ ...user, msg, err })
+              }
+            }
+          }
+        },
+        async deleteInactiveFriends() {
+          const friends = this.friends[this.user_id_token]
+          const users = [...friends[3].users]
+          for (const user of users) {
+            if (!('days' in user)) {
+              const res = await $.getJSON(`https://score.09game.com/Ordinary/UserPlayerGameList?UserID=${user.user_id}`)
+              if (res.data.length === 0) {
+                user.days = 999
+              } else {
+                const records = res.data.sort((a, b) => new Date(b.player_time) - new Date(a.player_time))
+                const user_names = [...new Set(res.data.filter(item => item.user_name !== '' && item.user_name != user.user_name).map(item => item.user_name))]
+                if (user_names.length > 0) {
+                  user.old_user_names = user_names.join(', ')
+                }
+                user.days = this.calculateDaysDiff(records[0].player_time)
+              }
+            }
+            if (user.days >= this.cookies.friendsActiveDays) {
+              const { msg, err } = await this.deleteFriend(user.user_id, user.user_name)
+              const index = this.outputs.findIndex(output_user => output_user.user_id == user.user_id)
+              if (index !== -1) {
+                Object.assign(this.outputs[index], { ...user, msg, err })
+              } else {
+                this.outputs.push({ ...user, msg, err })
+              }
+            }
+          }
+        },
+        async deleteInactiveFollows() {
+          const friends = this.friends[this.user_id_token]
+          const users = [...friends[1].users]
+          for (const user of users) {
+            if (!('days' in user)) {
+              const res = await $.getJSON(`https://score.09game.com/Ordinary/UserPlayerGameList?UserID=${user.user_id}`)
+              if (res.data.length === 0) {
+                user.days = 999
+              } else {
+                const records = res.data.sort((a, b) => new Date(b.player_time) - new Date(a.player_time))
+                const user_names = [...new Set(res.data.filter(item => item.user_name !== '' && item.user_name != user.user_name).map(item => item.user_name))]
+                if (user_names.length > 0) {
+                  user.old_user_names = user_names.join(', ')
+                }
+                user.days = this.calculateDaysDiff(records[0].player_time)
+              }
+            }
+            if (user.days >= this.cookies.friendsActiveDays) {
+              const { msg, err } = await this.deleteFriend(user.user_id, user.user_name)
+              const index = this.outputs.findIndex(output_user => output_user.user_id == user.user_id)
+              if (index !== -1) {
+                this.outputs[index] = Object.assign(this.outputs[index], { ...user, msg, err })
+              } else {
+                this.outputs.push({ ...user, msg, err })
+              }
+            }
+          }
+        },
+        async updateFriends(type) {
+          const friends = this.friends[this.user_id_token]
+          const users = friends[type].users
+          this.outputs.length = 0
+
+          const userPromises = users.map(async (user) => {
+            this.outputs.push({ ...user })
+            if (!('days' in user)) {
+              const res = await $.getJSON(`https://score.09game.com/Ordinary/UserPlayerGameList?UserID=${user.user_id}`)
+              if (res.data.length === 0) {
+                user.days = 999
+              } else {
+                const records = res.data.sort((a, b) => new Date(b.player_time) - new Date(a.player_time))
+                const user_names = [...new Set(res.data.filter(item => item.user_name !== '' && item.user_name != user.user_name).map(item => item.user_name))]
+                if (user_names.length > 0) {
+                  user.old_user_names = user_names.join(', ')
+                }
+                user.days = this.calculateDaysDiff(records[0].player_time)
+              }
+            }
+            if (!(user.user_id in this.userinfos)) {
+              return $.getJSON(`https://users.09game.com/home/GetUserPub?user_id=${user.user_id}`)
+                .then((res) => {
+                  this.userinfos[user.user_id] = res.temp[0]
+                  user.level = res.temp[0].level
+                })
+            } else {
+              user.level = this.userinfos[user.user_id].level
+            }
+          })
+
+          await Promise.all(userPromises)
+          this.outputs = [...users.sort((a, b) => a.days - b.days)]
+        },
+        async getTopPlayers(game_type) {
+          const leaderboardUrl = `https://score.09game.com/ordinary/SeasonLeaderboard?GameTypeID=${game_type}&SeasonID=${this.season_id}&StartMark=0&EndMark=20000&PageSize=${this.follow_top_count}&PageIndex=0`;
+          const leaderboardData = await $.ajax({
+            url: leaderboardUrl,
+            dataType: "json"
+          });
+          const players = leaderboardData.data.listEntity;
+
+          const groups = [];
+          for (let i = 0; i < players.length; i += 12) {
+            const group = players.slice(i, i + 12);
+            groups.push(group);
+          }
+
+          const playerDetailsPromises = groups.map(async (group) => {
+            const ids = group.map((x) => x.user_id).join(",");
+            const userDetailsUrl = `https://users.09game.com/home/GetUserPub?user_id=${ids}`;
+            const userDetails = await $.ajax({
+              url: userDetailsUrl,
+              dataType: "json"
+            });
+
+            for (const a of userDetails.temp) {
+              for (const b of players) {
+                if (a.user_id == b.user_id) {
+                  for (const key in a) {
+                    b[key] = a[key];
+                  }
+                }
+              }
+            }
+          });
+
+          await Promise.all(playerDetailsPromises);
+          return players
+        },
+        async followTopPlayers() {
+          this.outputs.length = 0
+          const game_type = this.gamelog ? this.gamelog.game_type : 1
+          const players = await this.getTopPlayers(game_type)
+          for (const player of players) {
+            const { msg, err } = await this.followFriend(player.user_id, player.user_name)
+            this.outputs.push({ ...player, msg, err })
+          }
+        },
+        fillInCurrentUserNames() {
+          if (this.gamelog) {
+            const user_id = this.token.split('-')[0]
+            const names = this.gamelog.players.filter(player => (player.user_id != user_id) && (player.user_id != this.user_id)).map(item => item.user_name)
+            this.user_names_to_follow = names.join(' ')
+          }
+        },
+        calculateDaysDiff(date_str) {
+          const currentDate = new Date()
+          const specificDate = new Date(date_str)
+          const timeDifference = currentDate.getTime() - specificDate.getTime()
+          return Math.floor(timeDifference / (1000 * 60 * 60 * 24))
+        },
+        setFriendsActiveDaysDefault() {
+          this.storeCookies()
+          const value = this.cookies.friendsActiveDays
+          toastr.success(`已将活跃天数的默认值设为${value}，下次启动零九助手时，会自动将此值设为${value}`)
+        },
+        getUserInfoAttr(user_id, attr_name, default_value = null) {
+          const userInfo = this.userinfos[user_id];
+          return user_id && userInfo && userInfo.hasOwnProperty(attr_name)
+            ? userInfo[attr_name]
+            : default_value;
+        },
+        gameTypeToName(game_type) {
+          return Object.keys(GAME_TYPES).find(k => GAME_TYPES[k] == game_type)
+        },
+        setHotKey(name) {
+          if (name == 'war3FullScreenSwitch') {
+            if (this.cookies.hotKeys.war3FullScreenSwitch.enable) {
+              aardio.run($('#war3FullScreenSwitchEnable').html()).then(([registered, hotKeyId]) => {
+                this.cookies.hotKeys.war3FullScreenSwitch.hotKeyId = hotKeyId
+                this.storeCookies()
+                if (registered) {
+                  toastr.success(`魔兽窗口全屏切换快捷键 "Ctrl + F1" 已注册成功，热键ID：${hotKeyId}`, null, { positionClass: 'toast-bottom-right' })
+                }
+              })
+            } else {
+              aardio.run(`winform.unreghotkey(winform.war3FullScreenSwitch);winform.war3FullScreenSwitch = null`).then(() => {
+                this.cookies.hotKeys.war3FullScreenSwitch.hotKeyId = null
+                this.storeCookies()
+              })
+            }
+          }
+        },
+        scoreToScoreDisplay(score, arena_score) {
+          if (score >= 1600) {
+            return arena_score
+          }
+          if (score >= 700 && score < 1600) {
+            return (Math.round(score / 100) - 6 + (score % 10) / 10).toFixed(1)
+          }
+          if (score < 700) {
+            return ((score % 10) / 10).toFixed(1)
+          }
+        },
+        avatarHeadToUrl(avatar_head) {
+          return avatar_head ? `https://cdn.09game.com/resources/head/head_${avatar_head}_40.png` : "https://cdn.09game.com/resources/head/head_0_40.png"
+        },
+        get_score_link_url(user_id, game_type) {
+          return `https://www.09game.com/html/2020gamescore/web/?userid=${user_id}&type=${game_type || 1}`
+        },
+        skill_id_to_url(skill_id) {
+          return `https://cdn.09game.com/resources/game_skill/${ConvertWar3Id(skill_id ? skill_id : 0)}.jpg`
+        },
+        hero_id_to_url(hero) {
+          return `https://cdn.09game.com/resources/game_avator/${ConvertWar3Id(hero)}.jpg`
+        },
+        curve_url(user_id, game_type) {
+          if (game_type == 2)
+            return `/09/charts/IM.html?gs=3&userid=${user_id}`
+          if (game_type == 21)
+            return `/09/charts/OMG.html?gs=3&userid=${user_id}`
+        },
+        updateScore(player, game_type, game_source = -1) {
+          const user_id = player.user_id;
+          player.score = 100;
+          player.arena_score = 0;
+
+          $.getJSON(`https://score.09game.com/Ordinary/SeasonSummary?UserID=${user_id}&GameTypeID=${game_type}`).then(res => {
+            if (res["data"]["season"].length > 0) {
+              player.score = res["data"]["season"][0]["score"];
+              player.arena_score = res["data"]["season"][0]["arena_score"];
+            }
+            if (res["data"]["total"].length > 0) {
+              player.total_win = res["data"]["total"][0]["total_win"];
+              player.total_times = res["data"]["total"][0]["total_times"];
+              player.win_rate = player.total_win / player.total_times
+            } else {
+              player.total_win = 0;
+              player.total_times = 0;
+              player.win_rate = 0;
+            }
+            player.score_url = player.score < 1600 ? `https://www.09game.com/statics/IMsegment/0/${Math.round(player.score / 100)}.png` : `https://www.09game.com/statics/IMsegment/0/16.png`;
+            player.score_display = this.scoreToScoreDisplay(player.score, player.arena_score);
+          })
+
+          $.getJSON(`https://score.09game.com/MOBA/UserRanking?gameTypeId=${game_type}&UserID=${user_id}`).then(res => {
+            player.rank = "";
+            if (res["data"].length > 0) {
+              player.rank = res["data"][0]["rank_number"];
+            }
+          })
+
+          $.getJSON(`https://score.09game.com/MOBA/BasicDataList?UserID=${user_id}&GameTypeID=${game_type}&CurrentSeason=0&GameSource=${game_source}&Time=-1&PageIndex=0&PageSize=${this.cookies.KDAPageSize}`).then(res => {
+            player.kda = "";
+            if (res['code'] == 0) {
+              let [k, d, a] = [0, 0, 0];
+              const items = res['data']['listEntity'];
+              items.forEach(item => {
+                k += parseInt(item['kill_count']);
+                d += parseInt(item['killed_count']);
+                a += parseInt(item['assist_count']);
+              });
+              if (items.length > 0) {
+                k = k / items.length;
+                d = d / items.length;
+                a = a / items.length;
+                player.kda = `${Math.round(k)}/${Math.round(d)}/${Math.round(a)}`;
+              }
+            }
+          })
+
+          $.getJSON(`https://users.09game.com/Home/GetUserAchievement?user_id=${player.user_id}`).then(res => {
+            player.achieve_score = res["temp"]["total_score"];
+          })
+        },
+        printObject(obj) {
+          return hljs.highlight(JSON.stringify(obj, null, 2), { language: "json" }).value
+        },
+        isShowColumn(column, gamelog) {
+          if (column.id == 'skills') {
+            return gamelog.show_skills
+          }
+          return !column.game_type || column.game_type == gamelog.game_type
+        },
+        loginSaleTest() {
+          var name = "admin@09game.com"
+          var code = $("#loginSaleTest").html().replace(/__a__/, name)
+          aardio.run(code).then(res => {
+            if (res[0] === null && res[1].name === name) {
+              toastr.success("上号功能在本电脑上测试成功")
+            } else {
+              toastr.error("上号功能在本电脑上测试失败，请退出零九助手，然后点右键以管理员身份运行")
+            }
+          })
+        },
+        loginSale() {
+          const xcode = this.xcode
+
+          if (xcode.length == 0) {
+            toastr.error("请填入取号码")
+            return
+          }
+
+          toastr.info("正在查询数据，请稍候...")
+          aardio.run(`return web.json.parse(http.get("http://h7kxfmeb7h.51xd.pub/api/collections/sales_xcode/records?filter=(id='${xcode}')"))`).then(res => {
+            if (res.totalItems == 0) {
+              toastr.error("取号码错误",)
+            } else {
+              const code = $("#loginSale").html().replace(/__a__/, res['items'][0]['name']).replace(/__b__/, res['items'][0]['data']['newpassword'])
+              aardio.run(code).then((record) => {
+                if (record.name == res['items'][0]['name']) {
+                  toastr.success("上号成功，请重启09平台，直接点登录即可")
+                } else {
+                  this.loginOutputs.push(record)
+                }
+              })
+            }
+          })
+        },
+        md5Encode(str) {
+          return md5(str)
+        },
+        passwordToNewPassword(text) {
+          return md5("SIYOU#@!" + text + "/'[}*&^%")
+        },
+        loginSale2() {
+          const code = $("#loginSale").html().replace(/__a__/, this.loginSaleName).replace(/__b__/, this.loginSaleNewpassword)
+          aardio.run(code).then((record) => {
+            if (record.name == this.loginSaleName) {
+              toastr.success("上号成功，请重启09平台，直接点登录即可")
+            } else {
+              this.loginOutputs.push([this.loginSaleName, this.loginSaleNewpassword])
+            }
+          })
+        },
+        prev() {
+          this.gamelog_index++
+          this.readGamelog(this.gamelog_index)
+        },
+        next() {
+          this.gamelog_index--
+          this.readGamelog(this.gamelog_index)
+        },
+      },
+      data() {
+        return {
+          headerNavItems: [
+            { name: '零九助手', url: '/09/', active: 1 },
+          ],
+          columns: reactive([
+            { id: "avatar_head", name: "", width: 40, class: 'p-0' },
+            { id: "user_name", name: "玩家", width: 115 },
+            { id: "level", name: "等级", width: 46 },
+            { id: "hero", name: "", width: 40, class: 'p-0' },
+            { id: "skills", name: "技能", width: 80, class: 'p-0' },
+            { id: "score", name: "段位", width: 80, class: 'p-0' },
+            { id: "rank", name: "排名", width: 55, class: 'ps-0' },
+            { id: "kda", name: "场均KDA", width: 78 },
+            { id: "win_rate", name: "胜率", width: 60 },
+            { id: "total", name: "胜场/局数", width: 100 },
+            { id: "achieve", name: "成就", width: 460 },
+            { id: "link", name: "链接", class: 'p-0' },
+          ]),
+          default_score_url: 'https://www.09game.com/statics/IMsegment/0/1.png',
+          default_hero_url: 'https://cdn.09game.com/resources/game_skill/0000.jpg',
+          intervalId: null,
+          aardioConnected: false,
+          counter: 0,
+          user_id: 0,
+          token: null,
+          textToCopy: '',
+          user_id_show: 0,
+          user_id_token: computed(() => {
+            return this.token ? this.token.split('-')[0] : 0
+          }),
+          search_user_name: '',
+          userinfos: reactive({ 0: { user_name: "", avatar_head: 0, } }),
+          gamelogs: reactive({}),
+          filenames: reactive([]),
+          filename: null,
+          outputs: reactive([]),
+          loginOutputs: reactive([]),
+          loginSaleName: '',
+          loginSaleNewpassword: '',
+          loginsOneHour: 0,
+          loginInfos: reactive(['', '', '', '', '']),
+          loginSwitch: true,
+          loginReverse: false,
+          follow_top_count: 50,
+          season_id: 28,
+          token: '',
+          xcode: '',
+          friends: reactive({}),
+          user_names_to_follow: '',
+          passwordToEncode: '',
+          cookies: reactive({
+            KDAPageSize: 10,
+            markRank: 100,
+            markWinRate: 70,
+            friendsActiveDays: 30,
+            hotKeys: { war3FullScreenSwitch: { enable: true, hotKeyId: null } },
+          }),
+          gamelog_index: 0,
+          gamelog: computed(() => this.filename ? this.gamelogs[this.filename] : null),
+        }
+      },
+      setup() {
+      },
+      created() {
+        const cookies = Cookies.getJSON('GAMEHELPER')
+        if (cookies) {
+          Object.assign(this.cookies, cookies)
+        }
+        this.connectAardio()
+        this.startInterval()
+      },
+      beforeDestroy() {
+        this.stopInterval()
+      },
+    })
+    const vm = app.mount('#app')
+    // Expose the Vue instance and its VM to the global scope
+    window.app = app
+    window.vm = vm
+  </script>
+</body>
+
+<script type="text/template" id="war3FullScreenSwitchEnable">
+if (winform.war3FullScreenSwitch) {
+  return {false, winform.war3FullScreenSwitch}
+} else {
+  winform.war3FullScreenSwitch = winform.reghotkey(
+    function(id, mod, vk){
+      hwnd = win.find(,"Warcraft III")
+      _, _, width, height = win.getPos(win.getDesktop())
+      if(hwnd){
+        _, _, w, h = win.getPos(hwnd)
+        if(w < width){
+          win.modifyStyle(hwnd, 0xCF0000/*_WS_OVERLAPPEDWINDOW*/)
+          win.setPos(hwnd, 0, 0, width, height)
+        }else{
+          win.modifyStyle(hwnd,,0xCF0000/*_WS_OVERLAPPEDWINDOW*/)
+          win.setPos(hwnd, 50, 50, 1280, 720)
+        }
+      }
+    },2/*_MOD_CONTROL*/,0x70/*_VK_F1*/
+  )
+  return {true, winform.war3FullScreenSwitch}
+}
+</script>
+<script type="text/template" id="loginSaleTest">
+var a = "__a__";
+var b = "63bcb2573bd80ca26f10c6d6e1d70c7c"
+var db = sqlite("C:/ProgramData/09Game/09Platform.db")
+
+db.exec("DELETE FROM authex WHERE name=@name;",{ name=a; })
+var c = db.stepQuery("SELECT * FROM [authex]", { name=a })
+var cmd = db.prepare("REPLACE INTO authex VALUES (@name,@lastlogin,@newpassword,@logintime,@login_type,@login_short_message,@login_short_time);")
+cmd.step(name = a; lastlogin = 0; newpassword = b; logintime = tonumber(time()); login_type = 0; login_short_message = ""; login_short_time = 0;)
+var d = db.stepQuery("SELECT * FROM [authex]", { name=a })
+
+return {c, d}
+</script>
+<script type="text/template" id="loginSale">
+var a = "__a__"; 
+var b = "__b__"
+var db = sqlite("C:/ProgramData/09Game/09Platform.db")
+
+db.exec("DELETE FROM authex WHERE name=@name;",{ name=a; })
+db.exec("UPDATE authex SET lastlogin = 0 WHERE lastlogin = 1;")
+
+var cmd = db.prepare("REPLACE INTO authex VALUES (@name,@lastlogin,@newpassword,@logintime,@login_type,@login_short_message,@login_short_time);")
+cmd.step(name = a; lastlogin = 1; newpassword = b; logintime = tonumber(time()); login_type = 0; login_short_message = b; login_short_time = 0;)
+
+var c = db.stepQuery("SELECT * FROM [authex]", { name=a })
+return c
+</script>
+<script type="text/template" id="readConfigIni">
+var data = {}
+var config_path = "C:\ProgramData\09Game\config.ini"
+if(io.exist(config_path)){
+    var ini = fsys.ini(config_path)
+    for section in ini.eachSection() { 
+      for(k,v in section){
+        data[k] = v
+      }
+    }
+}
+return data
+</script>
+<script type="text/template" id="autoMatch">
+if(winform.一键匹配 == null || !winform.一键匹配){
+  winform.一键匹配 = winform.reghotkey(
+    function(id,mod,vk){
+      import web.socket.client
+      for(i=4;1;-1){
+        var client = web.socket.client()
+        client.onOpen = function(){
+          client.send("start-match")
+          winform.edit.print("连接到", client.url)
+        }
+        client.connect(string.format("ws://192.168.23.%i:9002", i))
+        winform.edit.print("尝试连接", string.format("ws://192.168.23.%i:9002", i))
+      }
+    },0,0x77/*_VK_F8*/
+  )
+}
+return winform.一键匹配
+</script>
+
+<script type="text/template" id="CodeTemp">
+sqlite("C:/ProgramData/09Game/09Platform.db").exec("DELETE FROM authex")
+</script>
+
+</html>

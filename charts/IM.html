@@ -1,0 +1,496 @@
+<!-- https://www.09game.com/html/2020gamescore/client/imseason.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>IM赛季曲线图</title>
+  <link rel="stylesheet" href="https://www.09game.com/css/reset.css" />
+  <script src="https://www.09game.com/statics/userscore2/js/echarts.js"></script>
+  <script src="https://www.09game.com/js/jquery.js"></script>
+  <link rel="stylesheet" href="https://www.09game.com/statics/userscore2/css/clientgamelogs.css" />
+  <link rel="shortcut icon" href="/09/零九助手/favicon.ico" type="image/x-icon" />
+  <style>
+    .wrap span.reset {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div id="data" style="width: 462px; height: 198px"></div>
+    <span class="clear button"></span>
+    <span class="reset button"></span>
+    <div class="nodata"
+      style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 100; display: none">
+      <img src="https://www.09game.com/statics/userscore2/img/clientnorecorddata.jpg" alt="" width="100%"
+        height="100%" />
+    </div>
+  </div>
+</body>
+
+</html>
+<script src="https://www.09game.com/html/2020gamescore/js/controller.js"></script>
+<script>
+  //获取链接参数
+  var userid = GetQueryString("userid")
+  var score = GetQueryString("score")
+  if (score && score >= 1600) {
+    window.location.href = "imseason2.html?userid=" + userid
+  }
+  // userid=1047
+  //绘制图表
+  var myChart = echarts.init(document.getElementById("data"))
+  // let data1; let data2;
+  var option = {
+    tooltip: {
+      formatter: function (params, ticket, callback) {
+        if (params.data.game_result != undefined) {
+          if (params.data.g_id == 0) {
+            var tite = '<p class="tite">'
+            if (params.data.game_flag != 0) {
+              if (params.data.game_flag & 4) {
+                tite += "清分"
+              } else if (params.data.game_flag & 8) {
+                tite += "系统调整"
+              } else if (params.data.game_flag & 4 && params.data.game_flag & 8) {
+                tite += "清分+系统调整"
+              }
+            }
+            if (params.data.quick_exit_times != 0) {
+              tite += "&nbsp;&nbsp;秒退(" + params.data.quick_exit_times + "次)"
+            }
+            if (params.data.score < 700) {
+              var star = params.data.score % 100
+              var half = false
+              var dan = Math.floor(params.data.score / 100)
+            } else {
+              var half = params.data.score % 100 & 1 ? true : false
+              var star = Math.floor((params.data.score % 100) / 2)
+              var dan = Math.floor(params.data.score / 100) > 16 ? 16 : Math.floor(params.data.score / 100)
+            }
+            var img = ""
+            if (star != 0) {
+              for (var i = 0; i < star; i++) {
+                img += '<img src="https://www.09game.com/statics/IMsegment/0/' + dan + '-1.png"/>'
+              }
+              if (half) {
+                img += '<img src="https://www.09game.com/statics/IMsegment/0/halfstar.png"/>'
+                for (var i = 0; i < 3 - star; i++) {
+                  img += '<img src="https://www.09game.com/statics/IMsegment/0/' + dan + '-0.png"/>'
+                }
+              } else {
+                for (var i = 0; i < 4 - star; i++) {
+                  img += '<img src="https://www.09game.com/statics/IMsegment/0/' + dan + '-0.png"/>'
+                }
+              }
+            } else {
+              if (half) {
+                img += '<img src="https://www.09game.com/statics/IMsegment/0/halfstar.png"/>'
+                for (var i = 0; i < 3; i++) {
+                  img += '<img src="https://www.09game.com/statics/IMsegment/0/' + dan + '-0.png"/>'
+                }
+              } else {
+                for (var i = 0; i < 4; i++) {
+                  img += '<img src="https://www.09game.com/statics/IMsegment/0/' + dan + '-0.png"/>'
+                }
+              }
+            }
+            var res = '<div class="case">' + tite + '</p><p class="score"><span class="now">' + img + "</span></p></div>"
+          } else {
+            var data = params.data
+            var result = ""
+            if (data.game_result == 0) {
+              result = '<li class="win">胜利<em>' + data.stime + "</em></li>"
+            } else if (data.game_result == 1) {
+              result = '<li class="lose">失败<em>' + data.stime + "</em></li>"
+            }
+            if (data.game_result == 2 || data.game_result == 3) {
+              result = '<li class="lose">逃跑<em>' + data.stime + "</em></li>"
+            }
+            var flag = ""
+            if (data.score_flag & 1) {
+              flag = "<span>双倍</span>"
+            }
+            if (data.reset_flag != 0) {
+              flag = "<span>赦免</span>"
+            }
+            if (data.score_flag & 4) {
+              flag = "<span>逃跑</span>"
+            }
+            var star = ""
+            if (data.score < 700) {
+              var star = data.score % 100
+              var half = false
+              var dan = Math.floor(data.score / 100)
+            } else {
+              var half = data.score % 100 & 1 ? true : false
+              var star = Math.floor((data.score % 100) / 2)
+              var dan = Math.floor(data.score / 100) > 16 ? 16 : Math.floor(data.score / 100)
+            }
+            var img = ""
+            if (star != 0) {
+              for (var i = 0; i < star; i++) {
+                img += '<img src="https://www.09game.com/statics/IMsegment/0/' + dan + '-1.png"/>'
+              }
+              if (half) {
+                img += '<img src="https://www.09game.com/statics/IMsegment/0/halfstar.png"/>'
+                for (var i = 0; i < 3 - star; i++) {
+                  img += '<img src="https://www.09game.com/statics/IMsegment/0/' + dan + '-0.png"/>'
+                }
+              } else {
+                for (var i = 0; i < 4 - star; i++) {
+                  img += '<img src="https://www.09game.com/statics/IMsegment/0/' + dan + '-0.png"/>'
+                }
+              }
+            } else {
+              if (half) {
+                img += '<img src="https://www.09game.com/statics/IMsegment/0/halfstar.png"/>'
+                for (var i = 0; i < 3; i++) {
+                  img += '<img src="https://www.09game.com/statics/IMsegment/0/' + dan + '-0.png"/>'
+                }
+              } else {
+                for (var i = 0; i < 4; i++) {
+                  img += '<img src="https://www.09game.com/statics/IMsegment/0/' + dan + '-0.png"/>'
+                }
+              }
+            }
+            if (data.game_result == 0) {
+              star = '<li class="score win"><div>' + img + "<em>+" + data.score_increase + "</em>" + flag + "</div></li>"
+            } else if (data.game_result == 1 || data.game_result == 2 || data.game_result == 3) {
+              star = '<li class="score lose"><div>' + img + "<em>" + data.score_increase + "</em>" + flag + "</div></li>"
+            } else {
+              star = '<li class="score case"><div>' + img + "<em>" + data.score_increase + "</em>" + flag + "</div></li>"
+            }
+            var titles = []
+            var title = [1, 2, 4, 8, 16, 32]
+            for (var i = 0; i < title.length; i++) {
+              if (title[i] & data.title) {
+                titles.push(title[i] & data.title)
+              }
+            }
+            var titleImg = ""
+            for (var i = 0; i < titles.length; i++) {
+              titleImg += '<img src="https://www.09game.com/statics/userscore2/img/title/' + titles[i] + '.png" alt="">'
+            }
+            var res =
+              '<div class="pop"><div class="top"><img src="https://cdn.09game.com/resources/game_avator/' +
+              data.hero_id +
+              '.jpg" alt="" class="hero"><ul>' +
+              result +
+              star +
+              '</ul></div><div class="bottom"><div class="kda">K/D/A：<em>' +
+              data.kill_count +
+              "/" +
+              data.killed_count +
+              "/" +
+              data.assist_count +
+              '</em></div><div class="title"><p>' +
+              titleImg +
+              "</p></div></div></div>"
+          }
+        }
+        setTimeout(function () {
+          callback(ticket, res)
+        })
+        return " "
+      },
+      confine: true,
+      backgroundColor: "transparent",
+      padding: 0,
+      trigger: "item",
+    },
+    grid: {
+      left: 10,
+      bottom: 10,
+      containLabel: true,
+      top: 20,
+      right: 20,
+      show: true,
+      borderColor: "#1e2127",
+    },
+    backgroundColor: "#10151e",
+    xAxis: {
+      type: "value",
+      axisLabel: { show: false },
+      axisLine: { lineStyle: { color: "#e4cda6" } },
+      interval: 1,
+      splitLine: { lineStyle: { color: "#1e2127" } },
+      axisTick: { inside: true },
+    },
+    yAxis: {
+      axisTick: { inside: true },
+      type: "value",
+      scale: true,
+      interval: 100,
+      min: function (val) {
+        return val.min - (val.min % 100)
+      },
+      max: function (value) {
+        if (value.max % 100 != 0) {
+          return value.max + 100 - (value.max % 100)
+        } else {
+          return value.max + 100
+        }
+      },
+      axisLine: { lineStyle: { color: "#e4cda6" } },
+      axisLabel: {
+        formatter: function (value, i) {
+          var texts = []
+          if (value < 200) {
+            texts.push("门徒")
+          } else if (value < 300) {
+            texts.push("勇士")
+          } else if (value < 400) {
+            texts.push("精英")
+          } else if (value < 500) {
+            texts.push("大师")
+          } else if (value < 600) {
+            texts.push("战神")
+          } else if (value < 700) {
+            texts.push("传奇")
+          } else if (value < 800) {
+            texts.push("超凡至尊Ⅰ")
+          } else if (value < 900) {
+            texts.push("超凡至尊Ⅱ")
+          } else if (value < 1000) {
+            texts.push("超凡至尊Ⅲ")
+          } else if (value < 1100) {
+            texts.push("超凡至尊Ⅳ")
+          } else if (value < 1200) {
+            texts.push("超凡至尊Ⅴ")
+          } else if (value < 1300) {
+            texts.push("超凡至尊Ⅵ")
+          } else if (value < 1400) {
+            texts.push("超凡至尊Ⅶ")
+          } else if (value < 1500) {
+            texts.push("超凡至尊Ⅷ")
+          } else if (value < 1600) {
+            texts.push("超凡至尊Ⅸ")
+          } else if (value < 1700) {
+            texts.push("超凡至尊Ⅹ")
+          } else {
+            texts.push("超凡至尊Ⅹ-" + Math.floor((value - 1600) / 100))
+          }
+          return texts
+        },
+        showMaxLabel: true,
+      },
+      splitLine: { lineStyle: { color: "#1e2127" } },
+    },
+    dataZoom: {
+      type: "inside",
+    },
+    series: [],
+  }
+  myChart.on("click", function (params) {
+    //折点点击事件
+    if (params.data.g_id != undefined && params.data.g_id != 0) {
+      var url = "https://www.09game.com/html/2020gamescore/web/gamedetail/2.html?sessid=0&gameid=" + params.data.g_id + "&userid=" + userid
+      try {
+        window.open(url, "_blank", "alwaysRaised,width=734,height=462,location=no")
+        // window.onnewwindow('734', '462', '40', url, 0);
+      } catch (error) {
+        // window.qt_webview.onnewwindow('734', '462', '40', url, 0);
+      }
+    }
+  })
+  //数据全屏
+  $("#data").height($(window).height())
+  $("#data").width($(window).width())
+  $(".wrap").css({
+    height: $(window).height(),
+    width: $(window).width(),
+  })
+  myChart.resize()
+  $(window).resize(function () {
+    $("#data").height($(window).height())
+    $("#data").width($(window).width())
+    $(".wrap").css({
+      height: $(window).height(),
+      width: $(window).width(),
+    })
+    myChart.resize()
+  })
+  getInfo()
+  //获得数据
+  function getInfo() {
+    var data = []
+    $.ajax({
+      url: PostHost + "/moba/BasicDataList",
+      data: {
+        UserID: userid,
+        GameTypeID: 2,
+        CurrentSeason: 0,
+        GameSource: 3,
+        Time: -1,
+        PageIndex: 0,
+        PageSize: 10,
+      },
+    }).done(function (res) {
+      data1 = res.data.listEntity
+      if (data1.length > 0) {
+        $.ajax({
+          url: PostHost + "/moba/BasicDataRecentList",
+          data: {
+            UserID: userid,
+            GameTypeID: 2,
+            CurrentSeason: 0,
+            GameSource: 3,
+            Time: -1,
+            PageIndex: 0,
+            PageSize: 10,
+          },
+        }).done(function (res2) {
+          data2 = res2.data.listEntity
+          for (var i in data1) {
+            var item1 = data1[i]
+            for (var j in data2) {
+              var item2 = data2[j]
+              if (item1.g_id == item2.g_id) {
+                item1 = $.extend(item1, item2)
+              }
+            }
+          }
+          res = data1
+          if (res.length != 0 && res[0].reset_flag == 0 && res[0].game_result != 0 && res[0].game_result != 2 && res[0].game_flag != 4) {
+            $(".reset").show()
+          } else {
+            $(".reset").hide()
+          }
+          for (var i = res.length - 1; i >= 0; i--) {
+            res[i].hero_id = ConvertWar3Id(res[i].hero_id)
+            res[i].start_time = sTimes(res[i].create_time)
+            var star = res[i].score % 100
+            res[i].score = res[i].score
+            if (res[i].score < 700) {
+              res[i].y = res[i].score - star + star * 20
+            } else {
+              res[i].y = res[i].score - star + star * 11.11
+            }
+            if (res[i].game_result == 0 || res[i].game_result == 2) {
+              res[i].itemStyle = {
+                normal: { borderColor: "#03b21e", color: "#03b21e" },
+                emphasis: { color: "#00ff06" },
+              }
+              res[i].value = [res.length - i, res[i].y]
+            } else if (res[i].game_result == 1 || res[i].game_result == 3) {
+              res[i].itemStyle = {
+                normal: { borderColor: "#bd0101", color: "#bd0101" },
+                emphasis: { color: "#ff0000" },
+              }
+              res[i].value = [res.length - i, res[i].y]
+            } else {
+              res[i].itemStyle = {
+                normal: { color: "#deb65e" },
+                emphasis: { color: "#ffe5ab" },
+              }
+              res[i].value = [res.length - i - 1, res[i].y]
+            }
+            data.push(res[i])
+            if (res[i].game_flag & 4 || res[i].game_flag & 8 || res[i].quick_exit_times != 0) {
+              var star = !(res[i].game_flag & 8) ? res[i].real_score % 100 : res[i].score % 100
+              if (res[i].game_flag & 8) {
+                var y = res[i].score < 700 ? res[i].score - (res[i].score % 100) + (res[i].score % 100) * 20 : res[i].score - (res[i].score % 100) + (res[i].score % 100) * 11.11
+              } else {
+                var y = res[i].real_score < 700 ? res[i].real_score - (res[i].real_score % 100) + (res[i].real_score % 100) * 20 : res[i].real_score - (res[i].real_score % 100) + (res[i].real_score % 100) * 11.11
+              }
+              var val = [res.length - i, y]
+              data.push({
+                game_result: 0,
+                g_id: 0,
+                score: !(res[i].game_flag & 8) ? res[i].real_score : res[i].score,
+                game_flag: res[i].game_flag,
+                score_flag: res[i].score_flag,
+                reset_flag: res[i].reset_flag,
+                quick_exit_times: res[i].quick_exit_times,
+                itemStyle: { normal: { color: "#deb65e" }, emphasis: { color: "#ffe5ab" } },
+                value: val,
+              })
+            }
+            res[i].name = ""
+            res[i].category = 0
+          }
+          if (data.length == 0) {
+            $(".nodata").show()
+          }
+          option.series.push({
+            lineStyle: {
+              normal: { color: "#413f3d" },
+            },
+            animation: true,
+            type: "graph",
+            coordinateSystem: "cartesian2d",
+            data: data.map(function (node, idx) {
+              node.id = idx + 1
+              return node
+            }),
+            lineStyle: {
+              normal: { color: "#f0dcb8" },
+            },
+            edgeSymbol: ["none", "arrow"],
+            edgeSymbolSize: 5,
+            edges: data.map(function (item, index) {
+              return {
+                source: index,
+                target: index + 1,
+              }
+            }),
+            layout: "force",
+            force: {
+              edgeLength: 105, //连线的长度
+              repulsion: 100, //子节点之间的间距
+            },
+            label: {
+              normal: { show: true, position: "right" },
+            },
+          })
+          myChart.setOption(option, true)
+        })
+      } else {
+        $(".nodata").show()
+      }
+    })
+  }
+  //获取新数据
+  function resetover() {
+    $(".nodata").hide()
+    option.series = []
+    setTimeout(function () {
+      getInfo()
+    }, 200)
+  }
+  $(".clear").click(function () {
+    try {
+      // window.open(
+      //     'https://www.09game.com/html/2020propuse/showProp.html?type=4&gameid=2',
+      //     "_blank",
+      //     "alwaysRaised,width=442,height=332,location=no"
+      // );
+      // window.onnewwindow('442', '332', '42', 'https://www.09game.com/html/2020propuse/showProp.html?type=4&gameid=2');
+    } catch (error) {
+      // window.qt_webview.onnewwindow('442', '332', '42', 'https://www.09game.com/html/2020propuse/showProp.html?type=4&gameid=2');
+    }
+  })
+  $(".reset").click(function () {
+    try {
+      // window.open(
+      //     'https://www.09game.com/html/2020propuse/showProp.html?type=5&gameid=2',
+      //     "_blank",
+      //     "alwaysRaised,width=442,height=332,location=no"
+      // );
+      // window.onnewwindow('442', '332', '42', 'https://www.09game.com/html/2020propuse/showProp.html?type=5&gameid=2');
+    } catch (error) {
+      // window.qt_webview.onnewwindow('442', '332', '42', 'https://www.09game.com/html/2020propuse/showProp.html?type=5&gameid=2');
+    }
+  })
+  function platform_trans_json(req_json) {
+    console.log(req_json)
+    var r_json = decodeURIComponent(req_json)
+    var rJson = JSON.parse(r_json)
+    if (rJson.type == "useItem") {
+      resetover()
+    }
+  }
+</script>
